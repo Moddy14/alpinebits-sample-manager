@@ -1,0 +1,50 @@
+{
+  "default": "2022-10",
+  "latest": "2024-10",
+  "versions": [
+    {
+      "version": "2018-10",
+      "xsdPath": "/opt/alpinebits-manager/xsd/2018-10.xsd",
+      "hash": "906743304f72b289dc4f610426368c1b8a9c8cb1d969b02b892627a6b5c46001",
+      "size": 133165,
+      "status": "stable",
+      "deprecated": true,
+      "remoteHash": "906743304f72b289dc4f610426368c1b8a9c8cb1d969b02b892627a6b5c46001",
+      "remoteSynced": true,
+      "lastChecked": 1771616243685
+    },
+    {
+      "version": "2020-10",
+      "xsdPath": "/opt/alpinebits-manager/xsd/2020-10.xsd",
+      "hash": "8b55cadfd02d80e4c0f4cf9cab10bbb390878e220765c5b5aa1188037a18e40a",
+      "size": 205180,
+      "status": "stable",
+      "deprecated": false,
+      "remoteHash": "8b55cadfd02d80e4c0f4cf9cab10bbb390878e220765c5b5aa1188037a18e40a",
+      "remoteSynced": true,
+      "lastChecked": 1771616243955
+    },
+    {
+      "version": "2022-10",
+      "xsdPath": "/opt/alpinebits-manager/xsd/2022-10.xsd",
+      "hash": "c0525465bccdd0252bf55c9cb8616afdc9f414f92402be80c6b397562dda1a6c",
+      "size": 210624,
+      "status": "stable",
+      "deprecated": false,
+      "remoteHash": "c0525465bccdd0252bf55c9cb8616afdc9f414f92402be80c6b397562dda1a6c",
+      "remoteSynced": true,
+      "lastChecked": 1771616244220
+    },
+    {
+      "version": "2024-10",
+      "xsdPath": "/opt/alpinebits-manager/xsd/2024-10.xsd",
+      "hash": "7faa30fa530e85f82e07aa2ed778e6c80c18e54cb6837cffa2fb2e47f7f1bf00",
+      "size": 238003,
+      "status": "latest",
+      "deprecated": false,
+      "remoteHash": "7faa30fa530e85f82e07aa2ed778e6c80c18e54cb6837cffa2fb2e47f7f1bf00",
+      "remoteSynced": true,
+      "lastChecked": 1771616244544
+    }
+  ]
+}

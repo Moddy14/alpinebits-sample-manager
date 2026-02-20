@@ -1,0 +1,30 @@
+{
+  "name": "alpinebits-sample-manager",
+  "version": "1.0.0",
+  "description": "A web dashboard for managing, validating, and AI-generating AlpineBits HotelData XML test samples",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "alpinebits",
+    "hoteldata",
+    "xml",
+    "validation",
+    "xsd",
+    "hospitality",
+    "opentravel",
+    "ota"
+  ],
+  "author": "Moddy14",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

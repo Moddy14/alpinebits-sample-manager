@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏔️ AlpineBits Sample Manager</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <span class="logo">🏔️</span>
+      <div>
+        <h1>AlpineBits Sample Manager</h1>
+        <p class="subtitle">Official &amp; AI-Generated XML Samples · HotelData 2022-10</p>
+      </div>
+    </div>
+    <button class="guide-btn" onclick="openGuide()">📖 Anleitung</button>
+    <button class="guide-btn creds-btn" onclick="openCreds()" id="creds-status-btn">🔑 GitLab verbinden</button>
+    <div class="header-stats" id="header-stats">
+      <span class="stat-pill">Laden...</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+      <div class="nav-title">Sections</div>
+      <ul id="section-list"></ul>
+      <div class="nav-footer">
+        <a href="https://gitlab.com/alpinebits/hoteldata/standard-specification" target="_blank">📖 GitLab Repo ↗</a>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main id="main">
+      <div id="welcome" class="welcome">
+        <div class="welcome-icon">🏔️</div>
+        <h2>AlpineBits Sample Manager</h2>
+        <p>Wähle eine Section aus der Sidebar um die XML-Samples zu sehen, Lücken zu analysieren und mit KI neue Samples zu generieren.</p>
+        <div class="welcome-cards">
+          <div class="wcard">
+            <div class="wcard-icon">🏛️</div>
+            <div class="wcard-title">Offizielle Samples</div>
+            <div class="wcard-desc">Von GitLab geladen, mit Syntax-Highlighting</div>
+          </div>
+          <div class="wcard">
+            <div class="wcard-icon">📦</div>
+            <div class="wcard-title">Unsere XMLs</div>
+            <div class="wcard-desc">Lokale Test-Samples inkl. NEG &amp; INV Cases</div>
+          </div>
+          <div class="wcard">
+            <div class="wcard-icon">🤖</div>
+            <div class="wcard-title">KI-Generator</div>
+            <div class="wcard-desc">Claude generiert fehlende XML-Samples</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="section-view" style="display:none">
+        <!-- GAP BANNER -->
+        <div id="gap-banner" class="gap-banner"></div>
+
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="tab active" data-tab="official" onclick="switchTab('official')">🏛️ Offizielle Samples</button>
+          <button class="tab" data-tab="local" onclick="switchTab('local')">📦 Unsere XMLs</button>
+          <button class="tab" data-tab="compare" onclick="switchTab('compare')">⚖️ Vergleich</button>
+          <button class="tab" data-tab="generate" onclick="switchTab('generate')">🤖 KI-Generator</button>
+          <button class="tab" data-tab="validate-all" onclick="switchTab('validate-all')">📊 Validierungslauf</button>
+        </div>
+
+        <!-- OFFICIAL TAB -->
+        <div id="tab-official" class="tab-content active">
+          <div id="official-grid" class="xml-grid"></div>
+        </div>
+
+        <!-- LOCAL TAB -->
+        <div id="tab-local" class="tab-content">
+          <div id="local-grid" class="xml-grid"></div>
+        </div>
+
+        <!-- GENERATE TAB -->
+        <div id="tab-compare" class="tab-content">
+          <div id="compare-grid"></div>
+        </div>
+
+        <div id="tab-validate-all" class="tab-content">
+          <div class="validate-all-panel">
+            <div class="va-header">
+              <h3 style="margin:0 0 4px;font-size:1em">📊 Vollständiger Validierungslauf</h3>
+              <p style="margin:0 0 16px;color:var(--text-muted);font-size:0.85em">Alle lokalen XMLs werden gegen die gewählte Spec-Version validiert. INV-Dateien sind korrekt wenn sie <em>fehlschlagen</em>.</p>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <select id="va-spec-version" style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:6px 10px;font-size:0.85em;cursor:pointer">
+                  <option value="2024-10">2024-10 (Latest)</option>
+                  <option value="2022-10" selected>2022-10 (Default)</option>
+                  <option value="2020-10">2020-10</option>
+                  <option value="2018-10">2018-10</option>
+                </select>
+                <select id="va-section-filter" style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);border-radius:6px;padding:6px 10px;font-size:0.85em;cursor:pointer">
+                  <option value="">Alle Sections</option>
+                </select>
+                <button id="va-run-btn" onclick="runValidationBatch()" class="btn-generate" style="padding:8px 20px;width:auto">
+                  <span id="va-run-text">▶ Validierungslauf starten</span>
+                </button>
+                <button id="va-export-btn" onclick="exportValidationReport()" class="btn-sm" style="display:none">📥 Bericht exportieren</button>
+              </div>
+            </div>
+            <div id="va-results" style="margin-top:20px"></div>
+          </div>
+        </div>
+
+        <div id="tab-generate" class="tab-content">
+          <div class="generate-panel">
+            <h3>🤖 XML mit Claude AI generieren</h3>
+            <p class="gen-desc">Claude generiert ein valides AlpineBits XML-Sample basierend auf der Spezifikation und existierenden Beispielen.</p>
+            
+            <div class="gen-form">
+              <div class="form-row">
+                <label>Sample-Typ</label>
+                <select id="gen-type">
+                  <option value="RQ-basic">RQ — Basis Request</option>
+                  <option value="RQ-advanced">RQ — Erweiterter Request</option>
+                  <option value="RS-success">RS — Erfolgreiche Antwort</option>
+                  <option value="RS-error">RS — Fehler-Antwort</option>
+                  <option value="RS-advisory">RS — Advisory/Warning</option>
+                  <option value="NEG-01">NEG — Negativfall (Server muss ablehnen)</option>
+                  <option value="INV-01">INV — Invalides XML (Schema-Fehler)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Beschreibung <span class="muted">(optional)</span></label>
+                <input type="text" id="gen-desc" placeholder="Was soll dieses Sample demonstrieren?" />
+              </div>
+              <details style="margin-bottom:12px;">
+                <summary style="cursor:pointer;color:var(--accent);font-size:0.85em;user-select:none">🔑 Eigenen Anthropic API-Key verwenden (optional)</summary>
+                <div style="margin-top:8px;">
+                  <input type="password" id="gen-apikey" placeholder="sk-ant-api03-... (eigener Key, unbegrenzt nutzbar)" 
+                    style="width:100%;padding:8px 10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-family:monospace;font-size:0.8em;" />
+                  <p style="color:var(--text-muted);font-size:0.78em;margin:4px 0 0">
+                    Ohne Key: Standard-Limit 20 Calls/Tag. Mit eigenem Key: unbegrenzt. Key verlässt nie deinen Browser (wird nur direkt an die API gesendet).
+                  </p>
+                </div>
+              </details>
+              <button id="gen-btn" class="btn-generate" onclick="generateXml()">
+                <span id="gen-btn-text">🤖 Mit Claude generieren</span>
+              </button>
+            </div>
+
+            <div id="gen-result" style="display:none">
+              <div class="result-header">
+                <span id="gen-filename" class="filename-badge"></span>
+                <div class="result-actions">
+                  <select id="gen-spec-version" title="Spec-Version" style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);border-radius:5px;padding:3px 6px;font-size:0.78em;cursor:pointer">
+                    <option value="2024-10">2024-10 (Latest)</option>
+                    <option value="2022-10" selected>2022-10 (Default)</option>
+                    <option value="2020-10">2020-10</option>
+                    <option value="2018-10">2018-10</option>
+                  </select>
+                  <button onclick="validateGenerated()" class="btn-sm btn-validate">✅ Validieren</button>
+                  <button onclick="copyGenerated()" class="btn-sm">📋 Kopieren</button>
+                  <button onclick="saveGenerated()" class="btn-sm btn-save">💾 Speichern</button>
+                  <button onclick="createMR()" class="btn-sm btn-mr" id="btn-mr">📤 Pull Request</button>
+                </div>
+              </div>
+              <div id="validation-result"></div>
+              <pre><code id="gen-code" class="language-xml"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- XML VIEWER MODAL -->
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span id="modal-badge" class="type-badge"></span>
+        <span id="modal-name"></span>
+      </div>
+      <div class="modal-actions">
+        <select id="modal-spec-version" title="Spec-Version für Validierung" style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);border-radius:5px;padding:3px 6px;font-size:0.78em;cursor:pointer">
+          <option value="2024-10">2024-10 (Latest)</option>
+          <option value="2022-10" selected>2022-10 (Default)</option>
+          <option value="2020-10">2020-10</option>
+          <option value="2018-10">2018-10</option>
+        </select>
+        <button onclick="validateModal()" class="btn-sm btn-validate">✅ Validieren</button>
+        <button onclick="copyModal()" class="btn-sm">📋 Kopieren</button>
+        <button onclick="closeModal()" class="btn-sm btn-close">✕</button>
+      </div>
+    </div>
+    <div id="modal-validation"></div>
+    <div class="modal-body">
+      <pre><code id="modal-code" class="language-xml"></code></pre>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+<!-- GUIDE MODAL -->
+<div id="guide-modal" class="modal" onclick="if(event.target===this)closeGuide()">
+  <div class="modal-box guide-modal-box">
+    <div class="modal-header">
+      <div class="modal-title">📖 Anleitung — AlpineBits Sample Manager</div>
+      <button onclick="closeGuide()" class="btn-sm btn-close">✕ Schließen</button>
+    </div>
+    <div class="modal-body guide-body">
+      
+      <div class="guide-hero">
+        <div class="guide-hero-icon">🏔️</div>
+        <h2>AlpineBits Sample Manager</h2>
+        <p>Dieses Dashboard verwaltet XML-Testdaten für den <strong>AlpineBits HotelData Standard</strong> — 
+        das offizielle Protokoll für den Datenaustausch zwischen Hotelsoftware-Systemen in den Alpen.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>🎯 Was ist AlpineBits?</h3>
+        <p>AlpineBits ist ein offener Standard für die Kommunikation zwischen Hotel-Property-Management-Systemen (PMS), 
+        Channel-Managern, Buchungsplattformen und OTAs. Er basiert auf dem <strong>OTA-Schema</strong> 
+        (OpenTravel Alliance) und definiert XML-Nachrichten für:</p>
+        <div class="guide-grid">
+          <div class="guide-card"><span class="guide-card-icon">🤝</span><strong>Handshake</strong><p>Verbindungsaufbau &amp; Capability-Austausch</p></div>
+          <div class="guide-card"><span class="guide-card-icon">🛏️</span><strong>FreeRooms</strong><p>Verfügbarkeits-Updates: freie/belegte Zimmer</p></div>
+          <div class="guide-card"><span class="guide-card-icon">💶</span><strong>BaseRates</strong><p>Basis-Preisabfragen zwischen Systemen</p></div>
+          <div class="guide-card"><span class="guide-card-icon">📋</span><strong>RatePlans</strong><p>Preisplan-Notifikationen &amp; Sonderangebote</p></div>
+          <div class="guide-card"><span class="guide-card-icon">👤</span><strong>GuestRequests</strong><p>Buchungen, Reservierungen, Stornierungen</p></div>
+          <div class="guide-card"><span class="guide-card-icon">🏨</span><strong>Inventory</strong><p>Stammdaten: Zimmertypen, Ausstattung</p></div>
+          <div class="guide-card"><span class="guide-card-icon">🎿</span><strong>ActivityData</strong><p>Aktivitäten &amp; Events rund ums Hotel</p></div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h3>📊 Offizielle Samples vs. Unsere Testsammlung</h3>
+        <div class="guide-comparison">
+          <div class="guide-col">
+            <div class="guide-col-header official">🏛️ Offizielle Samples</div>
+            <ul>
+              <li>~54 XMLs aus dem <a href="https://gitlab.com/alpinebits/hoteldata/standard-specification" target="_blank">AlpineBits GitLab</a></li>
+              <li>Live geladen — immer aktuell</li>
+              <li>Hauptsächlich Happy-Path Beispiele</li>
+              <li>Kaum Negativ- oder Invalidierungstests</li>
+            </ul>
+          </div>
+          <div class="guide-col">
+            <div class="guide-col-header local">📦 Erweiterte Testsammlung</div>
+            <ul>
+              <li><strong>141 XMLs</strong> — mehr als doppelt so viele</li>
+              <li>Systematische <strong>NEG</strong>-Tests: Was Server ablehnen müssen</li>
+              <li>Systematische <strong>INV</strong>-Tests: XSD-Fehler die erkannt werden müssen</li>
+              <li>Edge Cases: Delta/CompleteSet, Capabilities, Grenzwerte, Saisonen</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h3>🖱️ Die fünf Tabs erklärt</h3>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="step-num">①</div>
+            <div class="step-content">
+              <strong>🏛️ Offizielle Samples</strong>
+              <p>Live-Ansicht aller offiziellen XMLs vom AlpineBits GitLab. Anklicken öffnet den XML-Viewer mit Syntax-Highlighting und Validierungsoption.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">②</div>
+            <div class="step-content">
+              <strong>📦 Unsere XMLs</strong>
+              <p>Die erweiterte, lokal gespeicherte Testsammlung. Alle XML-Typen (RQ, RS, NEG, INV) systematisch abgedeckt.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">③</div>
+            <div class="step-content">
+              <strong>⚖️ Vergleich</strong>
+              <p>Side-by-Side Gegenüberstellung: Offizielle Samples (links) vs. unsere lokalen XMLs (rechts), nach Typ gruppiert (RQ/RS/NEG/INV). Zeigt sofort wo wir mehr oder weniger Coverage haben als official.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">④</div>
+            <div class="step-content">
+              <strong>📊 Validierungslauf</strong>
+              <p>Vollautomatischer Batch-Test aller lokalen XMLs gegen eine wählbare Spec-Version. INV-Dateien gelten als korrekt wenn sie <em>fehlschlagen</em> (das ist ihr Zweck!). Ergebnis als Score + Detailbericht, Export als TXT möglich.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">⑤</div>
+            <div class="step-content">
+              <strong>🤖 KI-Generator</strong>
+              <p>Claude AI generiert auf Knopfdruck valide AlpineBits-XMLs. Typ und Beschreibung eingeben, KI erstellt das XML mit korrekten Namespaces, Attributen und Beispieldaten. Direkt validierbar und speicherbar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h3>🔢 Versionsmanagement</h3>
+        <p>Das Dashboard verwaltet <strong>4 Spec-Versionen</strong> parallel:</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0">
+          <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-weight:700;color:var(--text-muted)">2018-10</div>
+            <div style="font-size:.75em;color:var(--text-muted);margin-top:2px">Veraltet</div>
+          </div>
+          <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-weight:700;color:var(--text-muted)">2020-10</div>
+            <div style="font-size:.75em;color:var(--text-muted);margin-top:2px">Stabil</div>
+          </div>
+          <div style="background:var(--bg-secondary);border:1px solid rgba(99,102,241,.5);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-weight:700;color:var(--accent)">2022-10</div>
+            <div style="font-size:.75em;color:var(--accent);margin-top:2px">✅ Default</div>
+          </div>
+          <div style="background:var(--bg-secondary);border:1px solid rgba(52,211,153,.4);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-weight:700;color:#34d399">2024-10</div>
+            <div style="font-size:.75em;color:#34d399;margin-top:2px">🆕 Latest</div>
+          </div>
+        </div>
+        <p style="font-size:.85em;color:var(--text-muted)">Jede XSD-Datei wird alle 12 Stunden gegen das offizielle GitLab-Repository geprüft. Der Header zeigt den aktuellen Status. Bei Änderungen: <span style="color:#fbbf24">⚠️ XSD geändert</span> — dann sollte ein Retest durchgeführt werden.</p>
+        <p style="font-size:.85em;color:var(--text-muted);margin-top:6px">💡 <strong>Wichtig:</strong> Jedes Zertifikat gilt für eine bestimmte Spec-Version. Wenn 2024-10 erscheint, bleibt ein 2022-10-Zertifikat gültig — es ist nur noch kein 2024-10-Zertifikat.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>🏷️ XML-Typen Legende</h3>
+        <div class="guide-legend" style="display:flex;flex-direction:column;gap:8px">
+          <div><span class="card-badge badge-rq">RQ</span> <strong>Request</strong> — wird vom Client an den Server gesendet; muss XSD-valide sein</div>
+          <div><span class="card-badge badge-rs">RS</span> <strong>Response</strong> — Serverantwort; muss XSD-valide sein</div>
+          <div><span class="card-badge badge-neg">NEG</span> <strong>Negativfall</strong> — XSD-valide, aber Server MUSS aufgrund von Geschäftslogik ablehnen</div>
+          <div><span class="card-badge badge-inv">INV</span> <strong>Invalide</strong> — absichtlich fehlerhaftes XML; XMLlint MUSS Fehler melden (Validierungslauf: ✅ wenn fehlschlägt)</div>
+          <div><span class="card-badge badge-contrib">contrib</span> <strong>Community</strong> — von der Community beigesteuerte Beispiele</div>
+        </div>
+        <div style="margin-top:14px;padding:10px 14px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:.82em;color:#fbbf24">
+          ⚠️ <strong>Hinweis zu INV-Tests &amp; Spec-Versionen:</strong> Manche INV-Dateien testen Regeln, die erst ab einer bestimmten Spec-Version im XSD erzwungen werden. Beispiel: <code>INV-02-missing-hotelcode</code> schlägt korrekt nur gegen 2024-10 fehl (HotelCode-Fix). Das ist kein Fehler, sondern ein wertvoller Hinweis auf XSD-Schwächen in älteren Versionen.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h3>🤖 KI-Generator — Details</h3>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong>Standard-Nutzung (20 Calls/Tag)</strong>
+              <p>Ohne eigenen Key: kostenlos nutzbar, max. 20 KI-Generierungen pro Tag. Reset automatisch nach 24h.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong>Eigener Anthropic API-Key (unbegrenzt)</strong>
+              <p>Unter <em>🔑 Eigenen Anthropic API-Key verwenden</em> den eigenen Key eintragen (<code>sk-ant-...</code>). Der Key verlässt nie den Browser — er wird direkt an die Anthropic API gesendet, ohne Umweg über den Server.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong>Spec-Version für Generierung wählen</strong>
+              <p>Im Validierungsschritt nach der Generierung kann die Ziel-Spec-Version gewählt werden. Empfehlung: gegen 2022-10 (Default) und 2024-10 (Latest) testen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section guide-footer-section">
+        <p class="guide-note">
+          💡 <strong>Tipp Validierungslauf:</strong> Erst mit <em>2022-10</em> laufen lassen (Baseline), dann mit <em>2024-10</em> vergleichen. Unterschiede zeigen wo die neue Spec strenger wurde.
+        </p>
+        <p class="guide-note" style="margin-top:8px">
+          📌 Alle Validierungen nutzen <strong>xmllint</strong> mit dem offiziellen <code>alpinebits.xsd</code> — dasselbe Tool wie in der offiziellen AlpineBits Test-Pipeline.
+        </p>
+        <p class="guide-note" style="margin-top:8px">
+          🔗 <a href="https://gitlab.com/alpinebits/hoteldata/standard-specification" target="_blank">AlpineBits GitLab Repository ↗</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- CREDENTIALS MODAL -->
+<div id="creds-modal" class="modal" onclick="if(event.target===this)closeCreds()">
+  <div class="modal-box creds-modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🔑 GitLab Credentials</div>
+      <button onclick="closeCreds()" class="btn-sm btn-close">✕</button>
+    </div>
+    <div class="modal-body creds-body">
+      <div class="creds-info">
+        <p>Um Pull Requests zum offiziellen AlpineBits Repository zu erstellen, benötigst du einen GitLab Personal Access Token.</p>
+        <div class="creds-steps">
+          <div class="creds-step">
+            <span class="step-num" style="width:20px;height:20px;font-size:.75em">1</span>
+            <span>Gehe zu <a href="https://gitlab.com/-/profile/personal_access_tokens" target="_blank">GitLab → Profile → Access Tokens</a></span>
+          </div>
+          <div class="creds-step">
+            <span class="step-num" style="width:20px;height:20px;font-size:.75em">2</span>
+            <span>Erstelle Token mit Scopes: <code>api</code>, <code>write_repository</code></span>
+          </div>
+          <div class="creds-step">
+            <span class="step-num" style="width:20px;height:20px;font-size:.75em">3</span>
+            <span>Token + Username unten eintragen</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="creds-form">
+        <div class="form-row">
+          <label>GitLab Username</label>
+          <input type="text" id="gl-username" placeholder="z.B. gapp-christian" />
+        </div>
+        <div class="form-row">
+          <label>Personal Access Token</label>
+          <input type="password" id="gl-token" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" />
+        </div>
+        <div class="creds-actions">
+          <button onclick="testAndSaveCreds()" class="btn-generate" style="width:auto;padding:10px 24px">
+            <span id="creds-btn-text">✅ Speichern &amp; Testen</span>
+          </button>
+          <button onclick="clearCreds()" class="btn-sm" style="margin-left:8px">🗑️ Löschen</button>
+        </div>
+        <div id="creds-test-result" style="margin-top:12px"></div>
+      </div>
+
+      <div class="creds-note">
+        🔒 Credentials werden nur in deinem Browser gespeichert (localStorage) — nie an den Server übertragen, nur direkt für GitLab API-Calls genutzt.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MR STATUS MODAL -->
+<div id="mr-modal" class="modal" onclick="if(event.target===this)closeMrModal()">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="mr-modal-title">📤 Pull Request erstellen</div>
+      <button onclick="closeMrModal()" class="btn-sm btn-close">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div id="mr-modal-body"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

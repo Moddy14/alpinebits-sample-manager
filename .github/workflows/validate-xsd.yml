@@ -1,0 +1,62 @@
+name: Validate XSD Schemas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'xsd/*.xsd'
+      - 'xsd/versions.json'
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: XSD Schema Integrity Check
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+
+      - name: Validate XSD files are well-formed
+        run: |
+          echo "🔍 Checking XSD schemas..."
+          for xsd in xsd/*.xsd; do
+            echo -n "  Checking $xsd... "
+            if xmllint --noout "$xsd" 2>/dev/null; then
+              echo "✅"
+            else
+              echo "❌ FAILED"
+              exit 1
+            fi
+          done
+          echo "✅ All XSD schemas are well-formed"
+
+      - name: Check versions.json
+        run: |
+          echo "🔍 Checking versions.json..."
+          python3 -c "
+          import json, os
+          with open('xsd/versions.json') as f:
+              meta = json.load(f)
+          for v in meta['versions']:
+              xsd = v['xsdPath'].replace('/opt/alpinebits-manager/', '')
+              local_path = 'xsd/' + os.path.basename(xsd)
+              assert os.path.exists(local_path), f'Missing XSD: {local_path}'
+              print(f'  ✅ {v[\"version\"]} — {local_path}')
+          print('✅ versions.json is consistent')
+          "
+
+      - name: Node.js setup check
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check server.js
+        run: node --check server.js && echo "✅ server.js syntax OK"

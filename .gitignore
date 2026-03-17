@@ -21,3 +21,4 @@ Thumbs.db
 *.log
 npm-debug.log*
 TASK.md
+xsd/versions.json

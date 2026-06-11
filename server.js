@@ -205,19 +205,26 @@ let xsdVersionMeta = loadXsdVersions();
 async function checkAllXsdVersions() {
   const meta = loadXsdVersions();
   const REMOTE_BASE = 'https://gitlab.com/alpinebits/hoteldata/standard-specification/-/raw';
+  let shouldPersist = false;
   for (const v of meta.versions) {
     try {
       const res = await fetch(`${REMOTE_BASE}/${v.version}/files/schema-xsd/alpinebits.xsd`);
       if (!res.ok) continue;
       const txt = await res.text();
       const remoteHash = createHash('sha256').update(txt).digest('hex');
-      v.remoteHash = remoteHash;
-      v.remoteSynced = remoteHash === v.hash;
+      const remoteSynced = remoteHash === v.hash;
+      if (v.remoteHash !== remoteHash || v.remoteSynced !== remoteSynced) {
+        v.remoteHash = remoteHash;
+        v.remoteSynced = remoteSynced;
+        shouldPersist = true;
+      }
+      // Keep the in-memory status fresh without creating a daily git diff.
       v.lastChecked = Date.now();
     } catch {}
   }
-  // Write updated metadata
-  writeFileSync(path.join(XSD_DIR, 'versions.json'), JSON.stringify(meta, null, 2));
+  if (shouldPersist) {
+    writeFileSync(path.join(XSD_DIR, 'versions.json'), JSON.stringify(meta, null, 2));
+  }
   xsdVersionMeta = meta;
 }
 

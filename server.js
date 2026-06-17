@@ -509,6 +509,11 @@ Return ONLY the XML, nothing else.`;
       if (userKey && userKey.startsWith('sk-ant-')) {
         activeKey = userKey;
       } else {
+        if (!ANTHROPIC_KEY) {
+          return json({
+            error: 'Der gemeinsame Anthropic API-Key ist aktuell deaktiviert. Bitte eigenen Anthropic API-Key eingeben oder spaeter erneut versuchen.'
+          }, 503);
+        }
         const rl = checkRateLimit();
         if (rl.limited) {
           return json({ error: `Daily limit erreicht (${DEFAULT_KEY_RATE.limit}/Tag). Reset in ~${rl.resetIn}h. Bitte eigenen Anthropic API-Key eingeben.` }, 429);
